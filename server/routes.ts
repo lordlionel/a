@@ -145,28 +145,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   new TableRow({
                     children: [
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Nom", bold: true })] })],
+                        children: [new Paragraph({ children: [new TextRun({ text: "N°", bold: true })] })],
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Montant", bold: true })] })],
+                        children: [new Paragraph({ children: [new TextRun({ text: "NOMS ET PRENOMS", bold: true })] })],
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Heure", bold: true })] })],
+                        children: [new Paragraph({ children: [new TextRun({ text: "Consommation", bold: true })] })],
                       }),
                     ],
                   }),
                   // Data rows
-                  ...consumptions.map(consumption => 
+                  ...consumptions.map((consumption, index) => 
                     new TableRow({
                       children: [
+                        new TableCell({
+                          children: [new Paragraph({ children: [new TextRun({ text: (index + 1).toString() })] })],
+                        }),
                         new TableCell({
                           children: [new Paragraph({ children: [new TextRun({ text: consumption.consumer.name })] })],
                         }),
                         new TableCell({
                           children: [new Paragraph({ children: [new TextRun({ text: `${consumption.amount} FCFA` })] })],
-                        }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: new Date(consumption.createdAt!).toLocaleTimeString('fr-FR') })] })],
                         }),
                       ],
                     })
