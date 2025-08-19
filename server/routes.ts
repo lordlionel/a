@@ -1,16 +1,70 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
 import { storage } from "./storage";
 import { insertConsumerSchema, insertPresenceSchema, insertConsumptionSchema } from "@shared/schema";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, AlignmentType, WidthType } from "docx";
 
+// Middleware d'authentification
+function requireAuth(req: any, res: any, next: any) {
+  if (req.session && req.session.isAuthenticated) {
+    return next();
+  } else {
+    return res.status(401).json({ message: "Non autorisé" });
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Configuration des sessions
+  app.use(session({
+    secret: 'sitab-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 heures
+    }
+  }));
+
   // Get current date in YYYY-MM-DD format
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
 
+  // ROUTES D'AUTHENTIFICATION
+  app.post("/api/auth/login", async (req, res) => {
+    const { username, password } = req.body;
+    
+    // Vérification des identifiants
+    if (username === "admin" && password === "admin01") {
+      (req.session as any).isAuthenticated = true;
+      (req.session as any).user = { username: "admin" };
+      res.json({ success: true, message: "Connexion réussie" });
+    } else {
+      res.status(401).json({ message: "Identifiants incorrects" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).json({ message: "Erreur lors de la déconnexion" });
+      } else {
+        res.json({ message: "Déconnexion réussie" });
+      }
+    });
+  });
+
+  app.get("/api/auth/user", (req, res) => {
+    if ((req.session as any)?.isAuthenticated) {
+      res.json({ user: (req.session as any).user });
+    } else {
+      res.status(401).json({ message: "Non authentifié" });
+    }
+  });
+
   // CONSUMERS ENDPOINTS
-  app.get("/api/consommateurs", async (req, res) => {
+  app.get("/api/consommateurs", requireAuth, async (req, res) => {
     try {
       const consumers = await storage.getConsumers();
       res.json(consumers);
@@ -20,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/consommateurs", async (req, res) => {
+  app.post("/api/consommateurs", requireAuth, async (req, res) => {
     try {
       const validatedData = insertConsumerSchema.parse(req.body);
       const consumer = await storage.createConsumer(validatedData);
@@ -31,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/consommateurs/:id", async (req, res) => {
+  app.delete("/api/consommateurs/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteConsumer(req.params.id);
       res.status(204).send();
@@ -42,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PRESENCES ENDPOINTS
-  app.post("/api/presences", async (req, res) => {
+  app.post("/api/presences", requireAuth, async (req, res) => {
     try {
       const validatedData = insertPresenceSchema.parse(req.body);
       const presence = await storage.markPresence(validatedData);
@@ -53,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/presences/:date", async (req, res) => {
+  app.get("/api/presences/:date", requireAuth, async (req, res) => {
     try {
       const consumersWithPresence = await storage.getConsumersWithPresence(req.params.date);
       res.json(consumersWithPresence);
@@ -64,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // CONSUMPTIONS ENDPOINTS
-  app.post("/api/consommations", async (req, res) => {
+  app.post("/api/consommations", requireAuth, async (req, res) => {
     try {
       const data = {
         ...req.body,
@@ -79,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/consommations", async (req, res) => {
+  app.get("/api/consommations", requireAuth, async (req, res) => {
     try {
       const date = req.query.date as string || getCurrentDate();
       const consumptions = await storage.getConsumptionsByDate(date);
@@ -91,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // STATISTICS ENDPOINT
-  app.get("/api/statistics", async (req, res) => {
+  app.get("/api/statistics", requireAuth, async (req, res) => {
     try {
       const date = req.query.date as string || getCurrentDate();
       const stats = await storage.getDailyStats(date);
@@ -103,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WORD REPORT ENDPOINT
-  app.get("/api/rapport/journalier", async (req, res) => {
+  app.get("/api/rapport/journalier", requireAuth, async (req, res) => {
     try {
       const date = req.query.date as string || getCurrentDate();
       const consumptions = await storage.getConsumptionsByDate(date);

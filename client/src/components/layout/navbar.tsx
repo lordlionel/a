@@ -1,4 +1,7 @@
 import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { logout } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -47,13 +50,18 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="flex items-center">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">Marie Kouassi</span>
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-primary-600">MK</span>
-              </div>
-            </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600">admin</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="flex items-center space-x-1"
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Déconnexion</span>
+            </Button>
           </div>
         </div>
       </div>
