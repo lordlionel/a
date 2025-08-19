@@ -12,7 +12,7 @@ import {
   type ConsumptionWithConsumer
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Consumers
@@ -62,7 +62,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPresencesByDate(date: string): Promise<(Presence & { consumer: Consumer })[]> {
-    return await db
+    const results = await db
       .select({
         id: presences.id,
         consumerId: presences.consumerId,
@@ -72,8 +72,13 @@ export class DatabaseStorage implements IStorage {
         consumer: consumers,
       })
       .from(presences)
-      .leftJoin(consumers, eq(presences.consumerId, consumers.id))
+      .innerJoin(consumers, eq(presences.consumerId, consumers.id))
       .where(eq(presences.date, date));
+    
+    return results.map(result => ({
+      ...result,
+      consumer: result.consumer as Consumer
+    }));
   }
 
   async markPresence(presence: InsertPresence): Promise<Presence> {
@@ -121,7 +126,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getConsumptionsByDate(date: string): Promise<ConsumptionWithConsumer[]> {
-    return await db
+    const results = await db
       .select({
         id: consumptions.id,
         consumerId: consumptions.consumerId,
@@ -131,9 +136,14 @@ export class DatabaseStorage implements IStorage {
         consumer: consumers,
       })
       .from(consumptions)
-      .leftJoin(consumers, eq(consumptions.consumerId, consumers.id))
+      .innerJoin(consumers, eq(consumptions.consumerId, consumers.id))
       .where(eq(consumptions.date, date))
       .orderBy(desc(consumptions.createdAt));
+    
+    return results.map(result => ({
+      ...result,
+      consumer: result.consumer as Consumer
+    }));
   }
 
   async createConsumption(consumption: InsertConsumption): Promise<Consumption> {
@@ -171,10 +181,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(consumptions.date, date));
 
     return {
-      totalConsumers: totalConsumersResult.count || 0,
-      presentToday: presentTodayResult.count || 0,
-      dailyConsumptions: dailyConsumptionsResult.count || 0,
-      dailyRevenue: dailyConsumptionsResult.revenue || 0,
+      totalConsumers: (totalConsumersResult?.count as number) || 0,
+      presentToday: (presentTodayResult?.count as number) || 0,
+      dailyConsumptions: (dailyConsumptionsResult?.count as number) || 0,
+      dailyRevenue: (dailyConsumptionsResult?.revenue as number) || 0,
     };
   }
 }
