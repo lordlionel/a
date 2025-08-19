@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Save, FileText, DollarSign } from "lucide-react";
+import { Calendar, Save, FileText, DollarSign, Search, X, UserCheck } from "lucide-react";
 import type { Consumer, InsertConsumption } from "@shared/schema";
 
 interface ConsumerSelection {
@@ -22,6 +22,7 @@ export default function DailySheets() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [consumerSelections, setConsumerSelections] = useState<ConsumerSelection[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: consumers = [], isLoading } = useQuery({
     queryKey: ["/api/consommateurs"],
@@ -150,6 +151,24 @@ export default function DailySheets() {
     .filter(cs => cs.isSelected)
     .reduce((sum, cs) => sum + cs.amount, 0);
 
+  // Filter consumers based on search term
+  const filteredSelections = consumerSelections.filter(selection =>
+    selection.consumer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (selection.consumer.department && selection.consumer.department.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const selectedConsumers = consumerSelections.filter(cs => cs.isSelected);
+
+  const handleRemoveConsumer = (consumerId: string) => {
+    setConsumerSelections(prev =>
+      prev.map(cs =>
+        cs.consumer.id === consumerId
+          ? { ...cs, isSelected: false, amount: 0 }
+          : cs
+      )
+    );
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
@@ -232,14 +251,91 @@ export default function DailySheets() {
         </CardContent>
       </Card>
 
+      {/* Selected Consumers Summary */}
+      {selectedConsumers.length > 0 && (
+        <Card className="mb-4 border-success-200 bg-success-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-success-800">
+              <UserCheck className="w-5 h-5 mr-2" />
+              Consommateurs Sélectionnés ({selectedConsumers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {selectedConsumers.map((selection) => (
+                <div
+                  key={selection.consumer.id}
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-success-200"
+                  data-testid={`selected-consumer-${selection.consumer.id}`}
+                >
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <div className="w-6 h-6 bg-success-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-medium text-success-600">
+                        {getInitials(selection.consumer.name)}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {selection.consumer.name}
+                      </p>
+                      <p className="text-xs text-success-600 font-medium">
+                        {selection.amount} FCFA
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleRemoveConsumer(selection.consumer.id)}
+                    className="ml-2 h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50"
+                    data-testid={`remove-consumer-${selection.consumer.id}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Consumers List */}
       <Card>
         <CardHeader>
           <CardTitle>Liste des Consommateurs</CardTitle>
+          <div className="mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Rechercher un consommateur par nom ou département..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-10"
+                data-testid="input-search"
+              />
+              {searchTerm && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  data-testid="button-clear-search"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {searchTerm && (
+              <p className="text-sm text-gray-600 mt-2">
+                {filteredSelections.length} résultat{filteredSelections.length !== 1 ? 's' : ''} trouvé{filteredSelections.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {consumerSelections.map((selection) => (
+            {filteredSelections.map((selection) => (
               <div 
                 key={selection.consumer.id}
                 className={`p-4 rounded-lg border transition-all ${
@@ -322,6 +418,20 @@ export default function DailySheets() {
           {consumerSelections.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">Chargement des consommateurs...</p>
+            </div>
+          )}
+          
+          {searchTerm && filteredSelections.length === 0 && consumerSelections.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Aucun consommateur trouvé pour "{searchTerm}"</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="mt-2"
+              >
+                Effacer la recherche
+              </Button>
             </div>
           )}
         </CardContent>
