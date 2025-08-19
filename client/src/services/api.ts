@@ -7,7 +7,7 @@ import type {
   InsertConsumption 
 } from "@shared/schema";
 
-const API_BASE = "";
+const API_BASE = process.env.NODE_ENV === 'production' ? '' : '';
 
 export const api = {
   // Consumers
