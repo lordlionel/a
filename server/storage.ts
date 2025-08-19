@@ -180,9 +180,15 @@ export class DatabaseStorage implements IStorage {
       .from(consumptions)
       .where(eq(consumptions.date, date));
 
+    // Pour les fiches journalières, on compte les consommations uniques (pas les présences)
+    const [uniqueConsumersResult] = await db
+      .select({ count: sql`count(DISTINCT consumer_id)::int` })
+      .from(consumptions)
+      .where(eq(consumptions.date, date));
+
     return {
       totalConsumers: (totalConsumersResult?.count as number) || 0,
-      presentToday: (presentTodayResult?.count as number) || 0,
+      presentToday: (uniqueConsumersResult?.count as number) || 0, // Nombre de consommateurs ayant consommé
       dailyConsumptions: (dailyConsumptionsResult?.count as number) || 0,
       dailyRevenue: (dailyConsumptionsResult?.revenue as number) || 0,
     };

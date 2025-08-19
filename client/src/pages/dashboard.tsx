@@ -97,7 +97,7 @@ export default function Dashboard() {
                 <CheckCircle className="w-6 h-6 text-success-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Présents Aujourd'hui</p>
+                <p className="text-sm font-medium text-gray-600">Ont consommé aujourd'hui</p>
                 <p className="text-2xl font-bold text-gray-900">{stats?.presentToday || 0}</p>
               </div>
             </div>
