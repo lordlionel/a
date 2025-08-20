@@ -33,5 +33,12 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   
   // Use serverless-http to handle the request
   const serverlessHandler = serverless(app);
-  return await serverlessHandler(event, context);
+  const result = await serverlessHandler(event, context);
+  
+  // Ensure the result has the required HandlerResponse structure
+  return {
+    statusCode: (result as any)?.statusCode || 200,
+    body: (result as any)?.body || '',
+    headers: (result as any)?.headers || {},
+  };
 };
