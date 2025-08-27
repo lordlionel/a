@@ -55,6 +55,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
+          <img 
+            src="/icon.png" 
+            alt="SITAB Logo" 
+            className="w-16 h-16 mx-auto mb-4 rounded-lg"
+          />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">SITAB</h1>
           <h2 className="text-xl text-gray-600">Système de Gestion de Cantine</h2>
           <p className="mt-4 text-sm text-gray-500">
