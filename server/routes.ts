@@ -18,11 +18,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configuration des sessions
   app.use(session({
-    secret: 'sitab-secret-key',
+    secret: process.env.SESSION_SECRET || 'sitab-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 heures
     }
