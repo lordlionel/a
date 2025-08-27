@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, User } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -25,6 +26,8 @@ export default function Login() {
       });
 
       if (response.ok) {
+        // Invalider le cache pour forcer la vérification du statut d'authentification
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         toast({
           title: "Connexion réussie",
           description: "Bienvenue dans SITAB",
