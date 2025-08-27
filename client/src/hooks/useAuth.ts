@@ -4,7 +4,9 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
-      const response = await fetch("/api/auth/user");
+      const response = await fetch("/api/auth/user", {
+        credentials: "include"
+      });
       if (!response.ok) {
         throw new Error("Non authentifié");
       }
@@ -23,6 +25,9 @@ export function useAuth() {
 }
 
 export async function logout() {
-  await fetch("/api/auth/logout", { method: "POST" });
+  await fetch("/api/auth/logout", { 
+    method: "POST",
+    credentials: "include"
+  });
   window.location.href = "/login";
 }
