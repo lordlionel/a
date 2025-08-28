@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { LocalModeToggle } from "../LocalModeToggle";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -48,6 +49,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <LocalModeToggle />
             <span className="text-sm text-gray-600">SITAB - Accès Direct</span>
           </div>
         </div>
