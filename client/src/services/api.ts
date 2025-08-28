@@ -54,7 +54,12 @@ export const api = {
       dailyRevenue: number;
     }> => {
       const url = date ? `${API_BASE}/api/statistics?date=${date}` : `${API_BASE}/api/statistics`;
-      return fetch(url).then(res => res.json());
+      return fetch(url).then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      });
     },
   },
 
