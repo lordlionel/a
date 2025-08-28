@@ -1,5 +1,4 @@
 import { Link, useLocation } from "wouter";
-import { LocalModeToggle } from "../LocalModeToggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "../ui/dropdown-menu";
 import { ChevronDown, Menu, Users, FileText, Coffee, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -108,7 +107,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <LocalModeToggle />
             <span className="text-sm text-gray-600">SITAB - Accès Direct</span>
           </div>
         </div>
