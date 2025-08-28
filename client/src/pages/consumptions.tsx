@@ -120,7 +120,7 @@ export default function Consumptions() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Consommateur
@@ -143,7 +143,7 @@ export default function Consumptions() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Montant
               </label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={() => setSelectedAmount(700)}
                   variant={selectedAmount === 700 ? "default" : "outline"}
@@ -171,7 +171,7 @@ export default function Consumptions() {
               </div>
             </div>
 
-            <div className="flex items-end">
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
               <Button
                 onClick={handleAddConsumption}
                 disabled={!selectedConsumer || !selectedAmount || createConsumptionMutation.isPending}
@@ -200,55 +200,104 @@ export default function Consumptions() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Consommateur</TableHead>
-                    <TableHead>Département</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Heure</TableHead>
-                    <TableHead className="w-20">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {consumptions.map((consumption) => (
-                    <TableRow key={consumption.id} data-testid={`consumption-row-${consumption.id}`}>
-                      <TableCell className="font-medium">
-                        {consumption.consumer.name}
-                      </TableCell>
-                      <TableCell className="text-gray-500">
-                        {consumption.consumer.department || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={consumption.amount === 700 ? "secondary" : "default"}
-                          className={consumption.amount === 700 
-                            ? "bg-accent-100 text-accent-800" 
-                            : "bg-primary-100 text-primary-800"
-                          }
-                        >
-                          {consumption.amount} FCFA
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-500">
-                        {new Date(consumption.createdAt!).toLocaleTimeString('fr-FR')}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          onClick={() => handleDeleteConsumption(consumption.id, consumption.consumer.name)}
-                          disabled={deleteConsumptionMutation.isPending}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2"
-                          data-testid={`button-delete-consumption-${consumption.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+              {/* Vue Desktop - Tableau */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Consommateur</TableHead>
+                      <TableHead>Département</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Heure</TableHead>
+                      <TableHead className="w-20">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {consumptions.map((consumption) => (
+                      <TableRow key={consumption.id} data-testid={`consumption-row-${consumption.id}`}>
+                        <TableCell className="font-medium">
+                          {consumption.consumer.name}
+                        </TableCell>
+                        <TableCell className="text-gray-500">
+                          {consumption.consumer.department || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={consumption.amount === 700 ? "secondary" : "default"}
+                            className={consumption.amount === 700 
+                              ? "bg-accent-100 text-accent-800" 
+                              : "bg-primary-100 text-primary-800"
+                            }
+                          >
+                            {consumption.amount} FCFA
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-500">
+                          {new Date(consumption.createdAt!).toLocaleTimeString('fr-FR')}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            onClick={() => handleDeleteConsumption(consumption.id, consumption.consumer.name)}
+                            disabled={deleteConsumptionMutation.isPending}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2"
+                            data-testid={`button-delete-consumption-${consumption.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Vue Mobile - Cartes */}
+              <div className="lg:hidden space-y-3">
+                {consumptions.map((consumption) => (
+                  <div 
+                    key={consumption.id} 
+                    className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+                    data-testid={`consumption-card-${consumption.id}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {consumption.consumer.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {consumption.consumer.department || "Aucun département"}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => handleDeleteConsumption(consumption.id, consumption.consumer.name)}
+                        disabled={deleteConsumptionMutation.isPending}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 ml-2 flex-shrink-0"
+                        data-testid={`button-delete-consumption-mobile-${consumption.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Badge 
+                        variant={consumption.amount === 700 ? "secondary" : "default"}
+                        className={consumption.amount === 700 
+                          ? "bg-accent-100 text-accent-800" 
+                          : "bg-primary-100 text-primary-800"
+                        }
+                      >
+                        {consumption.amount} FCFA
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        {new Date(consumption.createdAt!).toLocaleTimeString('fr-FR')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
               
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
