@@ -5,13 +5,9 @@ import { storage } from "./storage";
 import { insertConsumerSchema, insertPresenceSchema, insertConsumptionSchema } from "@shared/schema";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, AlignmentType, WidthType } from "docx";
 
-// Middleware d'authentification
+// Middleware d'authentification - désactivé pour accès direct
 function requireAuth(req: any, res: any, next: any) {
-  if (req.session && req.session.isAuthenticated) {
-    return next();
-  } else {
-    return res.status(401).json({ message: "Non autorisé" });
-  }
+  return next();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

@@ -13,17 +13,17 @@ export default function Dashboard() {
   const [selectedAmount, setSelectedAmount] = useState<number>(0);
   const currentDate = new Date().toISOString().split('T')[0];
 
-  const { data: consumers = [] } = useQuery({
+  const { data: consumers = [], isLoading: loadingConsumers } = useQuery({
     queryKey: ["/api/consommateurs"],
     queryFn: () => api.consumers.getAll(),
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["/api/statistics", currentDate],
     queryFn: () => api.statistics.getDaily(currentDate),
   });
 
-  const { data: recentConsumptions = [] } = useQuery({
+  const { data: recentConsumptions = [], isLoading: loadingConsumptions } = useQuery({
     queryKey: ["/api/consommations", currentDate],
     queryFn: () => api.consumptions.getByDate(currentDate),
   });
@@ -188,7 +188,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentConsumptions.slice(0, 5).map((consumption) => (
+              {(Array.isArray(recentConsumptions) ? recentConsumptions : []).slice(0, 5).map((consumption: any) => (
                 <div key={consumption.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
