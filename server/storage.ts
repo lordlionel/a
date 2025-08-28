@@ -29,6 +29,7 @@ export interface IStorage {
   // Consumptions
   getConsumptionsByDate(date: string): Promise<ConsumptionWithConsumer[]>;
   createConsumption(consumption: InsertConsumption): Promise<Consumption>;
+  deleteConsumption(id: string): Promise<void>;
   
   // Statistics
   getDailyStats(date: string): Promise<{
@@ -152,6 +153,10 @@ export class DatabaseStorage implements IStorage {
       .values(consumption)
       .returning();
     return created;
+  }
+
+  async deleteConsumption(id: string): Promise<void> {
+    await db.delete(consumptions).where(eq(consumptions.id, id));
   }
 
   async getDailyStats(date: string): Promise<{

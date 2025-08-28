@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Receipt, Plus } from "lucide-react";
+import { DollarSign, Receipt, Plus, Trash2 } from "lucide-react";
 import type { InsertConsumption } from "@shared/schema";
 
 export default function Consumptions() {
@@ -48,6 +48,25 @@ export default function Consumptions() {
     },
   });
 
+  const deleteConsumptionMutation = useMutation({
+    mutationFn: api.consumptions.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics", currentDate] });
+      toast({
+        title: "Succès",
+        description: "Consommation supprimée avec succès!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression de la consommation",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddConsumption = () => {
     if (!selectedConsumer || !selectedAmount) {
       toast({
@@ -65,6 +84,12 @@ export default function Consumptions() {
     };
 
     createConsumptionMutation.mutate(consumption);
+  };
+
+  const handleDeleteConsumption = (consumptionId: string, consumerName: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer la consommation de ${consumerName} ?`)) {
+      deleteConsumptionMutation.mutate(consumptionId);
+    }
   };
 
   const totalRevenue = consumptions.reduce((sum, consumption) => sum + consumption.amount, 0);
@@ -182,6 +207,7 @@ export default function Consumptions() {
                     <TableHead>Département</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Heure</TableHead>
+                    <TableHead className="w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -206,6 +232,18 @@ export default function Consumptions() {
                       </TableCell>
                       <TableCell className="text-gray-500">
                         {new Date(consumption.createdAt!).toLocaleTimeString('fr-FR')}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          onClick={() => handleDeleteConsumption(consumption.id, consumption.consumer.name)}
+                          disabled={deleteConsumptionMutation.isPending}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2"
+                          data-testid={`button-delete-consumption-${consumption.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

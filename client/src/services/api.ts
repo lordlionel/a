@@ -40,6 +40,9 @@ export const api = {
     
     create: (consumption: InsertConsumption): Promise<void> =>
       apiRequest("POST", `${API_BASE}/api/consommations`, consumption).then(() => {}),
+    
+    delete: (id: string): Promise<void> =>
+      apiRequest("DELETE", `${API_BASE}/api/consommations/${id}`).then(() => {}),
   },
 
   // Statistics

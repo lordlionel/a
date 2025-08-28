@@ -140,6 +140,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/consommations/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteConsumption(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting consumption:", error);
+      res.status(500).json({ message: "Erreur lors de la suppression de la consommation" });
+    }
+  });
+
   // STATISTICS ENDPOINT
   app.get("/api/statistics", requireAuth, async (req, res) => {
     try {
