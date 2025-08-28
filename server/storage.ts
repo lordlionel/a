@@ -20,6 +20,7 @@ export interface IStorage {
   getConsumer(id: string): Promise<Consumer | undefined>;
   createConsumer(consumer: InsertConsumer): Promise<Consumer>;
   deleteConsumer(id: string): Promise<void>;
+  updateConsumer(id: string, consumer: Partial<InsertConsumer>): Promise<Consumer>;
   
   // Presences
   getPresencesByDate(date: string): Promise<(Presence & { consumer: Consumer })[]>;
@@ -30,6 +31,8 @@ export interface IStorage {
   getConsumptionsByDate(date: string): Promise<ConsumptionWithConsumer[]>;
   createConsumption(consumption: InsertConsumption): Promise<Consumption>;
   deleteConsumption(id: string): Promise<void>;
+  clearAllPresences(): Promise<void>;
+  clearAllConsumptions(): Promise<void>;
   
   // Statistics
   getDailyStats(date: string): Promise<{
@@ -60,6 +63,15 @@ export class DatabaseStorage implements IStorage {
 
   async deleteConsumer(id: string): Promise<void> {
     await db.delete(consumers).where(eq(consumers.id, id));
+  }
+
+  async updateConsumer(id: string, updateData: Partial<InsertConsumer>): Promise<Consumer> {
+    const [updated] = await db
+      .update(consumers)
+      .set(updateData)
+      .where(eq(consumers.id, id))
+      .returning();
+    return updated;
   }
 
   async getPresencesByDate(date: string): Promise<(Presence & { consumer: Consumer })[]> {
@@ -157,6 +169,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteConsumption(id: string): Promise<void> {
     await db.delete(consumptions).where(eq(consumptions.id, id));
+  }
+
+  async clearAllPresences(): Promise<void> {
+    await db.delete(presences);
+  }
+
+  async clearAllConsumptions(): Promise<void> {
+    await db.delete(consumptions);
   }
 
   async getDailyStats(date: string): Promise<{

@@ -81,6 +81,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/consommateurs/:id", requireAuth, async (req, res) => {
+    try {
+      const updateData = req.body;
+      const consumer = await storage.updateConsumer(req.params.id, updateData);
+      res.json(consumer);
+    } catch (error) {
+      console.error("Error updating consumer:", error);
+      res.status(500).json({ message: "Erreur lors de la mise à jour du consommateur" });
+    }
+  });
+
   app.delete("/api/consommateurs/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteConsumer(req.params.id);
@@ -147,6 +158,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting consumption:", error);
       res.status(500).json({ message: "Erreur lors de la suppression de la consommation" });
+    }
+  });
+
+  // CLEAR HISTORY ENDPOINTS
+  app.delete("/api/presences", requireAuth, async (req, res) => {
+    try {
+      await storage.clearAllPresences();
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error clearing presences:", error);
+      res.status(500).json({ message: "Erreur lors de la suppression des présences" });
+    }
+  });
+
+  app.delete("/api/consommations", requireAuth, async (req, res) => {
+    try {
+      await storage.clearAllConsumptions();
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error clearing consumptions:", error);
+      res.status(500).json({ message: "Erreur lors de la suppression des consommations" });
     }
   });
 
