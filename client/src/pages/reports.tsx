@@ -10,23 +10,15 @@ export default function Reports() {
   const { toast } = useToast();
   const currentDate = new Date().toISOString().split('T')[0];
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats } = useQuery({
     queryKey: ["/api/statistics", currentDate],
     queryFn: () => api.statistics.getDaily(currentDate),
   });
 
-  const { data: consumptions = [], isLoading: consLoading } = useQuery({
+  const { data: consumptions = [] } = useQuery({
     queryKey: ["/api/consommations", currentDate],
     queryFn: () => api.consumptions.getByDate(currentDate),
   });
-
-  // Données par défaut si stats n'est pas défini
-  const safeStats = stats || {
-    totalConsumers: 0,
-    presentToday: 0,
-    dailyConsumptions: 0,
-    dailyRevenue: 0
-  };
 
   const handleExportDaily = async () => {
     try {
@@ -43,14 +35,6 @@ export default function Reports() {
       });
     }
   };
-
-  if (statsLoading || consLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Chargement des rapports...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -136,28 +120,28 @@ export default function Reports() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Total Consommateurs</span>
                 <Badge variant="outline" className="text-lg px-3 py-1">
-                  {safeStats.totalConsumers}
+                  {stats?.totalConsumers || 0}
                 </Badge>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Présents Aujourd'hui</span>
                 <Badge className="bg-success-100 text-success-800 text-lg px-3 py-1">
-                  {safeStats.presentToday}
+                  {stats?.presentToday || 0}
                 </Badge>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Consommations</span>
                 <Badge className="bg-accent-100 text-accent-800 text-lg px-3 py-1">
-                  {safeStats.dailyConsumptions}
+                  {stats?.dailyConsumptions || 0}
                 </Badge>
               </div>
               
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-lg font-semibold text-gray-900">Recette Totale</span>
                 <span className="text-2xl font-bold text-primary-600" data-testid="total-daily-revenue">
-                  {safeStats.dailyRevenue} FCFA
+                  {stats?.dailyRevenue || 0} FCFA
                 </span>
               </div>
             </div>
@@ -171,11 +155,10 @@ export default function Reports() {
           <CardContent>
             <div className="space-y-4">
               {(() => {
-                const count700 = (consumptions || []).filter(c => c.amount === 700).length;
-                const count1000 = (consumptions || []).filter(c => c.amount === 1000).length;
+                const count700 = consumptions.filter(c => c.amount === 700).length;
+                const count1000 = consumptions.filter(c => c.amount === 1000).length;
                 const revenue700 = count700 * 700;
                 const revenue1000 = count1000 * 1000;
-                const totalRevenue = revenue700 + revenue1000;
                 
                 return (
                   <>
@@ -199,26 +182,20 @@ export default function Reports() {
                       </Badge>
                     </div>
                     
-                    {totalRevenue > 0 ? (
-                      <div className="pt-4 border-t">
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className="bg-accent-500 h-4 rounded-l-full" 
-                            style={{ 
-                              width: `${(revenue700 / totalRevenue) * 100}%` 
-                            }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-sm text-gray-500 mt-2">
-                          <span>700F ({((revenue700 / totalRevenue) * 100).toFixed(1)}%)</span>
-                          <span>1000F ({((revenue1000 / totalRevenue) * 100).toFixed(1)}%)</span>
-                        </div>
+                    <div className="pt-4 border-t">
+                      <div className="w-full bg-gray-200 rounded-full h-4">
+                        <div 
+                          className="bg-accent-500 h-4 rounded-l-full" 
+                          style={{ 
+                            width: `${(revenue700 / (revenue700 + revenue1000)) * 100}%` 
+                          }}
+                        ></div>
                       </div>
-                    ) : (
-                      <div className="pt-4 border-t text-center text-gray-500">
-                        <p>Aucune consommation aujourd'hui</p>
+                      <div className="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>700F ({((revenue700 / (revenue700 + revenue1000)) * 100).toFixed(1)}%)</span>
+                        <span>1000F ({((revenue1000 / (revenue700 + revenue1000)) * 100).toFixed(1)}%)</span>
                       </div>
-                    )}
+                    </div>
                   </>
                 );
               })()}
@@ -244,7 +221,7 @@ export default function Reports() {
                     Rapport_Journalier_{currentDate.replace(/-/g, '_')}.docx
                   </p>
                   <p className="text-xs text-gray-500">
-                    Généré aujourd'hui - {safeStats.dailyRevenue} FCFA
+                    Généré aujourd'hui - {stats?.dailyRevenue || 0} FCFA
                   </p>
                 </div>
               </div>

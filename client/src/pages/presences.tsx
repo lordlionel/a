@@ -153,7 +153,8 @@ export default function DailySheets() {
 
   // Filter consumers based on search term
   const filteredSelections = consumerSelections.filter(selection =>
-    selection.consumer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    selection.consumer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (selection.consumer.department && selection.consumer.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const selectedConsumers = consumerSelections.filter(cs => cs.isSelected);
@@ -307,7 +308,7 @@ export default function DailySheets() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Rechercher un consommateur par nom..."
+                placeholder="Rechercher un consommateur par nom ou département..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-10"
@@ -365,6 +366,11 @@ export default function DailySheets() {
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {selection.consumer.name}
                         </p>
+                        {selection.consumer.department && (
+                          <p className="text-xs text-gray-500 truncate">
+                            {selection.consumer.department}
+                          </p>
+                        )}
                       </div>
                     </div>
                     

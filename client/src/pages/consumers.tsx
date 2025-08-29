@@ -16,6 +16,7 @@ export default function Consumers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newConsumer, setNewConsumer] = useState<InsertConsumer>({
     name: "",
+    department: "",
   });
 
   const { data: consumers = [], isLoading } = useQuery({
@@ -28,7 +29,7 @@ export default function Consumers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/consommateurs"] });
       setIsDialogOpen(false);
-      setNewConsumer({ name: "" });
+      setNewConsumer({ name: "", department: "" });
       toast({
         title: "Succès",
         description: "Consommateur ajouté avec succès",
@@ -126,6 +127,16 @@ export default function Consumers() {
                 />
               </div>
               
+              <div>
+                <Label htmlFor="department">Département</Label>
+                <Input
+                  id="department"
+                  value={newConsumer.department || ""}
+                  onChange={(e) => setNewConsumer({ ...newConsumer, department: e.target.value })}
+                  placeholder="Ex: Ressources Humaines"
+                  data-testid="input-consumer-department"
+                />
+              </div>
               
               <div className="flex gap-3 pt-4">
                 <Button 
@@ -180,6 +191,9 @@ export default function Consumers() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{consumer.name}</h3>
+                      {consumer.department && (
+                        <p className="text-sm text-gray-500">{consumer.department}</p>
+                      )}
                     </div>
                   </div>
                   
