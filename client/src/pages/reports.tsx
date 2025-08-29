@@ -24,14 +24,23 @@ export default function Reports() {
   const clearDailyMutation = useMutation({
     mutationFn: () => api.reports.clearDailyConsumptions(currentDate),
     onSuccess: () => {
+      // Invalider toutes les requêtes de consommations
       queryClient.invalidateQueries({ queryKey: ["/api/consommations"] });
+      // Invalider spécifiquement les consommations du jour
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations", currentDate] });
+      // Invalider les statistiques
       queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics", currentDate] });
+      // Forcer le rechargement de toutes les données
+      queryClient.refetchQueries({ queryKey: ["/api/consommations"] });
+      queryClient.refetchQueries({ queryKey: ["/api/statistics"] });
       toast({
         title: "Succès",
         description: "Consommations du jour supprimées avec succès",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Erreur lors de la suppression:", error);
       toast({
         title: "Erreur",
         description: "Erreur lors de la suppression des consommations",
