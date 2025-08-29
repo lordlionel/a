@@ -6,6 +6,16 @@ This is a full-stack canteen management system (SITAB) built to handle consumer 
 
 The system is designed to streamline canteen operations by providing an intuitive web interface for staff to manage consumers, mark daily attendance, record meal sales, and generate comprehensive reports for administrative purposes.
 
+## Recent Changes
+
+### August 29, 2025
+- ✅ **Date Selection for Consumptions**: Added calendar picker allowing staff to add consumptions for any specific date, not just today
+- ✅ **Date Selection for Reports**: Implemented date picker in Reports page enabling viewing statistics and downloading reports for any specific date
+- ✅ **Daily Consumption Reset Fix**: Resolved routing conflicts that prevented the "Clear Daily Consumptions" button from working properly
+- ✅ **API Route Optimization**: Created dedicated `/api/clear-daily-consumptions` endpoint to avoid conflicts with Vite middleware
+- ✅ **Cache Invalidation**: Fixed React Query cache updates ensuring interface reflects data changes immediately
+- ✅ **Mobile Responsive Design**: Enhanced mobile experience with proper date selectors and error handling
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

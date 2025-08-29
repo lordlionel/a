@@ -12,13 +12,6 @@ function requireAuth(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // DEBUG MIDDLEWARE pour toutes les requêtes DELETE
-  app.use((req, res, next) => {
-    if (req.method === 'DELETE') {
-      console.log(`DEBUG: DELETE request to ${req.path}, full URL: ${req.url}`);
-    }
-    next();
-  });
   
   // Configuration des sessions
   app.use(session({
@@ -169,31 +162,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // TEST ENDPOINT pour débugger
-  app.delete("/api/test-delete", async (req, res) => {
-    console.log("TEST DELETE ENDPOINT REACHED!");
-    res.json({ message: "Test endpoint working!" });
-  });
 
-  // CLEAR DAILY CONSUMPTIONS ENDPOINT (solution finale)
+  // CLEAR DAILY CONSUMPTIONS ENDPOINT
   app.delete("/api/clear-daily-consumptions", requireAuth, async (req, res) => {
     try {
-      console.log("=== CLEAR DAILY ENDPOINT REACHED ===");
       const date = req.query.date as string || getCurrentDate();
-      console.log(`Date to clear: ${date}`);
-      
       const beforeConsumptions = await storage.getConsumptionsByDate(date);
-      console.log(`Before deletion: ${beforeConsumptions.length} consumptions`);
-      
       await storage.clearDailyConsumptions(date);
-      
-      const afterConsumptions = await storage.getConsumptionsByDate(date);
-      console.log(`After deletion: ${afterConsumptions.length} consumptions`);
       
       res.status(200).json({ 
         message: `Consommations du ${date} supprimées avec succès`,
         cleared: beforeConsumptions.length,
-        remaining: afterConsumptions.length
+        remaining: 0
       });
     } catch (error) {
       console.error("Error clearing daily consumptions:", error);
