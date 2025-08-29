@@ -198,6 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/rapport/journalier", requireAuth, async (req, res) => {
     try {
       const date = req.query.date as string || getCurrentDate();
+      const resetAfterDownload = req.query.reset === 'true';
       const consumptions = await storage.getConsumptionsByDate(date);
       const stats = await storage.getDailyStats(date);
 
@@ -289,6 +290,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const buffer = await Packer.toBuffer(doc);
+      
+      // Si reset demandé, vider toutes les consommations après génération du rapport
+      if (resetAfterDownload) {
+        try {
+          await storage.clearAllConsumptions();
+          console.log(`Consommations remises à zéro après téléchargement du rapport du ${date}`);
+        } catch (resetError) {
+          console.error("Error clearing consumptions after report download:", resetError);
+          // Ne pas bloquer le téléchargement si la remise à zéro échoue
+        }
+      }
       
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
       res.setHeader('Content-Disposition', `attachment; filename=Rapport_Journalier_${date.replace(/-/g, '_')}.docx`);
