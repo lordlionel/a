@@ -80,7 +80,7 @@ export const api = {
     },
     clearDailyConsumptions: (date?: string): Promise<{ message: string }> => {
       const url = date ? `${API_BASE}/api/consommations/journalieres?date=${date}` : `${API_BASE}/api/consommations/journalieres`;
-      return apiRequest(url, 'DELETE').then(res => {
+      return apiRequest("DELETE", url).then(res => {
         if (res.status === 204) {
           return { message: `Consommations du ${date || new Date().toISOString().split('T')[0]} supprimées avec succès` };
         }

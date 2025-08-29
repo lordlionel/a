@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Receipt, Plus, Trash2 } from "lucide-react";
+import { DollarSign, Receipt, Plus, Trash2, Calendar } from "lucide-react";
 import type { InsertConsumption } from "@shared/schema";
 
 export default function Consumptions() {
@@ -16,6 +17,7 @@ export default function Consumptions() {
   const [selectedConsumer, setSelectedConsumer] = useState<string>("");
   const [selectedAmount, setSelectedAmount] = useState<number>(0);
   const currentDate = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState<string>(currentDate);
 
   const { data: consumers = [] } = useQuery({
     queryKey: ["/api/consommateurs"],
@@ -23,15 +25,15 @@ export default function Consumptions() {
   });
 
   const { data: consumptions = [], isLoading } = useQuery({
-    queryKey: ["/api/consommations", currentDate],
-    queryFn: () => api.consumptions.getByDate(currentDate),
+    queryKey: ["/api/consommations", selectedDate],
+    queryFn: () => api.consumptions.getByDate(selectedDate),
   });
 
   const createConsumptionMutation = useMutation({
     mutationFn: api.consumptions.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/consommations", currentDate] });
-      queryClient.invalidateQueries({ queryKey: ["/api/statistics", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations", selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics", selectedDate] });
       setSelectedConsumer("");
       setSelectedAmount(0);
       toast({
@@ -51,8 +53,8 @@ export default function Consumptions() {
   const deleteConsumptionMutation = useMutation({
     mutationFn: api.consumptions.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/consommations", currentDate] });
-      queryClient.invalidateQueries({ queryKey: ["/api/statistics", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations", selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics", selectedDate] });
       toast({
         title: "Succès",
         description: "Consommation supprimée avec succès!",
@@ -80,7 +82,7 @@ export default function Consumptions() {
     const consumption: InsertConsumption = {
       consumerId: selectedConsumer,
       amount: selectedAmount,
-      date: currentDate,
+      date: selectedDate,
     };
 
     createConsumptionMutation.mutate(consumption);
@@ -107,7 +109,7 @@ export default function Consumptions() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Gestion des Consommations</h2>
         <p className="mt-2 text-gray-600">
-          {new Date().toLocaleDateString('fr-FR')} - {consumptions.length} consommations - {totalRevenue} FCFA
+          {new Date(selectedDate).toLocaleDateString('fr-FR')} - {consumptions.length} consommations - {totalRevenue} FCFA
         </p>
       </div>
 
@@ -120,7 +122,23 @@ export default function Consumptions() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-date"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Consommateur
@@ -171,7 +189,7 @@ export default function Consumptions() {
               </div>
             </div>
 
-            <div className="flex items-end sm:col-span-2 lg:col-span-1">
+            <div className="flex items-end">
               <Button
                 onClick={handleAddConsumption}
                 disabled={!selectedConsumer || !selectedAmount || createConsumptionMutation.isPending}
@@ -189,7 +207,7 @@ export default function Consumptions() {
       {/* Consumptions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Consommations du Jour</CardTitle>
+          <CardTitle>Consommations du {new Date(selectedDate).toLocaleDateString('fr-FR')}</CardTitle>
         </CardHeader>
         <CardContent>
           {consumptions.length === 0 ? (
