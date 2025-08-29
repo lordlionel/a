@@ -9,7 +9,6 @@ import Consumers from "@/pages/consumers";
 import Presences from "@/pages/presences";
 import Consumptions from "@/pages/consumptions";
 import Reports from "@/pages/reports";
-import ReportsSimple from "@/pages/reports-simple";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,8 +21,7 @@ function Router() {
           <Route path="/consumers" component={Consumers} />
           <Route path="/fiches" component={Presences} />
           <Route path="/consumptions" component={Consumptions} />
-          <Route path="/reports" component={ReportsSimple} />
-          <Route path="/reports-full" component={Reports} />
+          <Route path="/reports" component={Reports} />
           <Route component={NotFound} />
         </Switch>
       </main>

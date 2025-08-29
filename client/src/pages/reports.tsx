@@ -10,12 +10,12 @@ export default function Reports() {
   const { toast } = useToast();
   const currentDate = new Date().toISOString().split('T')[0];
 
-  const { data: stats, isError: statsError, isLoading: statsLoading } = useQuery({
+  const { data: stats } = useQuery({
     queryKey: ["/api/statistics", currentDate],
     queryFn: () => api.statistics.getDaily(currentDate),
   });
 
-  const { data: consumptions = [], isError: consError, isLoading: consLoading } = useQuery({
+  const { data: consumptions = [] } = useQuery({
     queryKey: ["/api/consommations", currentDate],
     queryFn: () => api.consumptions.getByDate(currentDate),
   });
@@ -35,27 +35,6 @@ export default function Reports() {
       });
     }
   };
-
-  // Show loading state
-  if (statsLoading || consLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Chargement des rapports...</div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (statsError || consError) {
-    return (
-      <div className="flex items-center justify-center h-64 flex-col">
-        <div className="text-lg text-red-600 mb-2">Erreur de chargement des données</div>
-        <Button onClick={() => window.location.reload()}>
-          Actualiser la page
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="px-4 py-6 sm:px-0">
