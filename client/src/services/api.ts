@@ -78,5 +78,9 @@ export const api = {
           document.body.removeChild(a);
         });
     },
+    clearDailyConsumptions: (date?: string): Promise<{ message: string }> => {
+      const url = date ? `${API_BASE}/api/consommations/journalieres?date=${date}` : `${API_BASE}/api/consommations/journalieres`;
+      return apiRequest(url, 'DELETE').then(res => res.json());
+    },
   },
 };

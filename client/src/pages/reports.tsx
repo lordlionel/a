@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Calendar, TrendingUp } from "lucide-react";
+import { FileText, Download, Calendar, TrendingUp, Trash2 } from "lucide-react";
 
 export default function Reports() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const currentDate = new Date().toISOString().split('T')[0];
 
   const { data: stats } = useQuery({
@@ -18,6 +19,25 @@ export default function Reports() {
   const { data: consumptions = [] } = useQuery({
     queryKey: ["/api/consommations", currentDate],
     queryFn: () => api.consumptions.getByDate(currentDate),
+  });
+
+  const clearDailyMutation = useMutation({
+    mutationFn: () => api.reports.clearDailyConsumptions(currentDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+      toast({
+        title: "Succès",
+        description: "Consommations du jour supprimées avec succès",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression des consommations",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleExportDaily = async () => {
@@ -36,6 +56,12 @@ export default function Reports() {
     }
   };
 
+  const handleClearDaily = () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer toutes les consommations du ${new Date(currentDate).toLocaleDateString('fr-FR')} ? Cette action est irréversible.`)) {
+      clearDailyMutation.mutate();
+    }
+  };
+
   return (
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8">
@@ -46,7 +72,7 @@ export default function Reports() {
       </div>
 
       {/* Export Options */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {/* Daily Report */}
         <Card className="text-center p-6 bg-gradient-to-br from-primary-50 to-primary-100 border-primary-200">
           <CardContent className="p-0">
@@ -64,6 +90,28 @@ export default function Reports() {
             >
               <Download className="w-4 h-4 mr-2" />
               Télécharger (.docx)
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Clear Daily Consumptions */}
+        <Card className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-0">
+            <div className="w-12 h-12 bg-red-500 rounded-lg mx-auto mb-4 flex items-center justify-center">
+              <Trash2 className="w-6 h-6 text-white" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Remise à Zéro</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Vider toutes les consommations du jour
+            </p>
+            <Button
+              onClick={handleClearDaily}
+              disabled={clearDailyMutation.isPending}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+              data-testid="button-clear-daily"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {clearDailyMutation.isPending ? "Suppression..." : "Vider la journée"}
             </Button>
           </CardContent>
         </Card>
