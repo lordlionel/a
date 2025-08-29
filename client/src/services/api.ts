@@ -78,12 +78,9 @@ export const api = {
           document.body.removeChild(a);
         });
     },
-    clearDailyConsumptions: (date?: string): Promise<{ message: string }> => {
-      const url = date ? `${API_BASE}/api/consommations/journalieres?date=${date}` : `${API_BASE}/api/consommations/journalieres`;
+    clearDailyConsumptions: (date?: string): Promise<{ message: string; cleared: number; remaining: number }> => {
+      const url = date ? `${API_BASE}/api/clear-daily-consumptions?date=${date}` : `${API_BASE}/api/clear-daily-consumptions`;
       return apiRequest("DELETE", url).then(res => {
-        if (res.status === 204) {
-          return { message: `Consommations du ${date || new Date().toISOString().split('T')[0]} supprimées avec succès` };
-        }
         return res.json();
       });
     },

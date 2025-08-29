@@ -12,6 +12,14 @@ function requireAuth(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // DEBUG MIDDLEWARE pour toutes les requêtes DELETE
+  app.use((req, res, next) => {
+    if (req.method === 'DELETE') {
+      console.log(`DEBUG: DELETE request to ${req.path}, full URL: ${req.url}`);
+    }
+    next();
+  });
+  
   // Configuration des sessions
   app.use(session({
     secret: process.env.SESSION_SECRET || 'sitab-secret-key-change-in-production',
@@ -161,6 +169,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TEST ENDPOINT pour débugger
+  app.delete("/api/test-delete", async (req, res) => {
+    console.log("TEST DELETE ENDPOINT REACHED!");
+    res.json({ message: "Test endpoint working!" });
+  });
+
+  // CLEAR DAILY CONSUMPTIONS ENDPOINT (solution finale)
+  app.delete("/api/clear-daily-consumptions", requireAuth, async (req, res) => {
+    try {
+      console.log("=== CLEAR DAILY ENDPOINT REACHED ===");
+      const date = req.query.date as string || getCurrentDate();
+      console.log(`Date to clear: ${date}`);
+      
+      const beforeConsumptions = await storage.getConsumptionsByDate(date);
+      console.log(`Before deletion: ${beforeConsumptions.length} consumptions`);
+      
+      await storage.clearDailyConsumptions(date);
+      
+      const afterConsumptions = await storage.getConsumptionsByDate(date);
+      console.log(`After deletion: ${afterConsumptions.length} consumptions`);
+      
+      res.status(200).json({ 
+        message: `Consommations du ${date} supprimées avec succès`,
+        cleared: beforeConsumptions.length,
+        remaining: afterConsumptions.length
+      });
+    } catch (error) {
+      console.error("Error clearing daily consumptions:", error);
+      res.status(500).json({ message: "Erreur lors de la suppression des consommations journalières" });
+    }
+  });
+
   // CLEAR HISTORY ENDPOINTS
   app.delete("/api/presences", requireAuth, async (req, res) => {
     try {
@@ -172,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/consommations", requireAuth, async (req, res) => {
+  app.delete("/api/consommations/all", requireAuth, async (req, res) => {
     try {
       await storage.clearAllConsumptions();
       res.status(204).send();
@@ -299,17 +339,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // CLEAR DAILY CONSUMPTIONS ENDPOINT
-  app.delete("/api/consommations/journalieres", requireAuth, async (req, res) => {
-    try {
-      const date = req.query.date as string || getCurrentDate();
-      await storage.clearDailyConsumptions(date);
-      res.json({ message: `Consommations du ${date} supprimées avec succès` });
-    } catch (error) {
-      console.error("Error clearing daily consumptions:", error);
-      res.status(500).json({ message: "Erreur lors de la suppression des consommations journalières" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
