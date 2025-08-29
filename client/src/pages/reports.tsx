@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Calendar, TrendingUp, Trash2 } from "lucide-react";
@@ -10,33 +12,34 @@ export default function Reports() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentDate = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState<string>(currentDate);
 
   const { data: stats } = useQuery({
-    queryKey: ["/api/statistics", currentDate],
-    queryFn: () => api.statistics.getDaily(currentDate),
+    queryKey: ["/api/statistics", selectedDate],
+    queryFn: () => api.statistics.getDaily(selectedDate),
   });
 
   const { data: consumptions = [] } = useQuery({
-    queryKey: ["/api/consommations", currentDate],
-    queryFn: () => api.consumptions.getByDate(currentDate),
+    queryKey: ["/api/consommations", selectedDate],
+    queryFn: () => api.consumptions.getByDate(selectedDate),
   });
 
   const clearDailyMutation = useMutation({
-    mutationFn: () => api.reports.clearDailyConsumptions(currentDate),
+    mutationFn: () => api.reports.clearDailyConsumptions(selectedDate),
     onSuccess: () => {
       // Invalider toutes les requêtes de consommations
       queryClient.invalidateQueries({ queryKey: ["/api/consommations"] });
       // Invalider spécifiquement les consommations du jour
-      queryClient.invalidateQueries({ queryKey: ["/api/consommations", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/consommations", selectedDate] });
       // Invalider les statistiques
       queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/statistics", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics", selectedDate] });
       // Forcer le rechargement de toutes les données
       queryClient.refetchQueries({ queryKey: ["/api/consommations"] });
       queryClient.refetchQueries({ queryKey: ["/api/statistics"] });
       toast({
         title: "Succès",
-        description: "Consommations du jour supprimées avec succès",
+        description: `Consommations du ${new Date(selectedDate).toLocaleDateString('fr-FR')} supprimées avec succès`,
       });
     },
     onError: (error) => {
@@ -51,10 +54,10 @@ export default function Reports() {
 
   const handleExportDaily = async () => {
     try {
-      await api.reports.downloadDaily(currentDate);
+      await api.reports.downloadDaily(selectedDate);
       toast({
         title: "Succès",
-        description: "Rapport journalier téléchargé avec succès",
+        description: `Rapport du ${new Date(selectedDate).toLocaleDateString('fr-FR')} téléchargé avec succès`,
       });
     } catch (error) {
       toast({
@@ -66,7 +69,7 @@ export default function Reports() {
   };
 
   const handleClearDaily = () => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer toutes les consommations du ${new Date(currentDate).toLocaleDateString('fr-FR')} ? Cette action est irréversible.`)) {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer toutes les consommations du ${new Date(selectedDate).toLocaleDateString('fr-FR')} ? Cette action est irréversible.`)) {
       clearDailyMutation.mutate();
     }
   };
@@ -76,8 +79,25 @@ export default function Reports() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Rapports et Statistiques</h2>
         <p className="mt-2 text-gray-600">
-          Génération et export des rapports - {new Date().toLocaleDateString('fr-FR')}
+          Génération et export des rapports - {new Date(selectedDate).toLocaleDateString('fr-FR')}
         </p>
+        
+        {/* Date Selector */}
+        <div className="mt-4 max-w-xs">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sélectionner la date
+          </label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="pl-10"
+              data-testid="input-report-date"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Export Options */}
