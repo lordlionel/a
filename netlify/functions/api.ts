@@ -66,13 +66,13 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       binary: ['image/*', 'application/pdf', 'application/octet-stream']
     });
     
-    const result = await serverlessHandler(event, context);
+    const result = await serverlessHandler(event, context) as any;
     
     return {
-      statusCode: result.statusCode || 200,
-      body: result.body || '',
+      statusCode: result?.statusCode || 200,
+      body: result?.body || '',
       headers: {
-        ...result.headers,
+        ...(result?.headers || {}),
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': 'true'
       }
