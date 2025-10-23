@@ -34,6 +34,8 @@ export interface IStorage {
   clearAllPresences(): Promise<void>;
   clearAllConsumptions(): Promise<void>;
   clearDailyConsumptions(date: string): Promise<void>;
+  getAllPresences(): Promise<Presence[]>;
+  getAllConsumptions(): Promise<Consumption[]>;
   
   // Statistics
   getDailyStats(date: string): Promise<{
@@ -182,6 +184,14 @@ export class DatabaseStorage implements IStorage {
 
   async clearDailyConsumptions(date: string): Promise<void> {
     await db.delete(consumptions).where(eq(consumptions.date, date));
+  }
+
+  async getAllPresences(): Promise<Presence[]> {
+    return await db.select().from(presences).orderBy(desc(presences.date));
+  }
+
+  async getAllConsumptions(): Promise<Consumption[]> {
+    return await db.select().from(consumptions).orderBy(desc(consumptions.date));
   }
 
   async getDailyStats(date: string): Promise<{

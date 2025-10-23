@@ -1,0 +1,16 @@
+{
+  "consumers": [
+    {
+      "id": "a658320a-650d-4f70-9d3f-77d9962982ea",
+      "name": "YEO NOUNAFO",
+      "department": "Administration",
+      "createdAt": "2025-08-28T00:53:16.550Z"
+    }
+  ],
+  "presences": [],
+  "consumptions": [],
+  "exportedAt": "2025-10-23T11:05:47.142Z",
+  "totalConsumers": 1,
+  "totalPresences": 0,
+  "totalConsumptions": 0
+}

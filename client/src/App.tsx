@@ -10,6 +10,8 @@ import Presences from "@/pages/presences";
 import Consumptions from "@/pages/consumptions";
 import Reports from "@/pages/reports";
 import NotFound from "@/pages/not-found";
+import { initializeMobileApp } from "@/lib/init-mobile";
+import { useEffect, useState } from "react";
 
 function Router() {
   return (
@@ -30,6 +32,28 @@ function Router() {
 }
 
 function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    initializeMobileApp()
+      .then(() => setIsReady(true))
+      .catch((error) => {
+        console.error('Failed to initialize mobile app:', error);
+        setIsReady(true); // Continue anyway in web mode
+      });
+  }, []);
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de l'application...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

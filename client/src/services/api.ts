@@ -1,4 +1,6 @@
 import { apiRequest } from "@/lib/queryClient";
+import { isNative } from "@/lib/platform";
+import { mobileApi } from "./mobile-api";
 import type { 
   Consumer, 
   InsertConsumer, 
@@ -9,7 +11,8 @@ import type {
 
 const API_BASE = process.env.NODE_ENV === 'production' ? '' : '';
 
-export const api = {
+// API Web (HTTP)
+const webApi = {
   // Consumers
   consumers: {
     getAll: (): Promise<Consumer[]> =>
@@ -86,3 +89,45 @@ export const api = {
     },
   },
 };
+
+// API qui s'adapte automatiquement entre mode web et mobile
+function createAdaptiveApi() {
+  // Si on est en mode natif (mobile), utiliser l'API locale SQLite
+  if (isNative()) {
+    return {
+      consumers: {
+        getAll: () => mobileApi.consumers.getAll(),
+        create: (data: InsertConsumer) => mobileApi.consumers.create(data),
+        delete: (id: string) => mobileApi.consumers.delete(id),
+      },
+      presences: {
+        getByDate: (date: string) => mobileApi.presences.getByDate(date),
+        mark: (data: { consumerId: string; date: string; isPresent: boolean }) => 
+          mobileApi.presences.add(data),
+      },
+      consumptions: {
+        getByDate: (date?: string) => 
+          mobileApi.consumptions.getByDate(date || new Date().toISOString().split('T')[0]),
+        create: (data: InsertConsumption) => mobileApi.consumptions.add(data),
+        delete: (id: string) => mobileApi.consumptions.delete(id),
+      },
+      statistics: {
+        getDaily: (date?: string) => 
+          mobileApi.statistics.getByDate(date || new Date().toISOString().split('T')[0]),
+      },
+      reports: {
+        downloadDaily: (date?: string) => 
+          mobileApi.consumptions.downloadReport(date || new Date().toISOString().split('T')[0]),
+        clearDailyConsumptions: (date?: string) => 
+          mobileApi.consumptions.clearDaily(date || new Date().toISOString().split('T')[0])
+            .then(() => ({ message: 'Supprimé', cleared: 0, remaining: 0 })),
+      },
+    };
+  }
+  
+  // Mode web - utiliser les appels HTTP normaux
+  return webApi;
+}
+
+// Export de l'API adaptative
+export const api = createAdaptiveApi();
